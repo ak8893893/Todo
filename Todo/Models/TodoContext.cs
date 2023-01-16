@@ -21,18 +21,21 @@ namespace Todo.Models
         public virtual DbSet<Employee> Employees { get; set; }
         public virtual DbSet<JobTitle> JobTitles { get; set; }
         public virtual DbSet<TodoList> TodoLists { get; set; }
+        public virtual DbSet<UploadFile> UploadFiles { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
             {
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-                optionsBuilder.UseSqlServer("Data Source=(LocalDB)\\MSSQLLocalDB;AttachDbFilename=G:\\其他電腦\\AK-main\\Code\\01-C#\\02-Todo\\Todo.mdf;Integrated Security=True;Connect Timeout=30");
+                optionsBuilder.UseSqlServer("Data Source=(LocalDB)\\MSSQLLocalDB;AttachDbFilename= H:\\Code\\01-C#\\02-Todo\\Todo.mdf;Integrated Security=True;Connect Timeout=30");
             }
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.HasAnnotation("Relational:Collation", "SQL_Latin1_General_CP1_CI_AS");
+
             modelBuilder.Entity<Division>(entity =>
             {
                 entity.ToTable("Division");
@@ -41,8 +44,7 @@ namespace Todo.Models
 
                 entity.Property(e => e.Name)
                     .IsRequired()
-                    .HasMaxLength(50)
-                    .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    .HasMaxLength(50);
             });
 
             modelBuilder.Entity<Employee>(entity =>
@@ -51,18 +53,13 @@ namespace Todo.Models
 
                 entity.Property(e => e.EmployeeId).HasDefaultValueSql("(newid())");
 
-                entity.Property(e => e.Account)
-                    .IsRequired()
-                    .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                entity.Property(e => e.Account).IsRequired();
 
                 entity.Property(e => e.Name)
                     .IsRequired()
-                    .HasMaxLength(50)
-                    .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    .HasMaxLength(50);
 
-                entity.Property(e => e.Password)
-                    .IsRequired()
-                    .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                entity.Property(e => e.Password).IsRequired();
 
                 entity.HasOne(d => d.Division)
                     .WithMany(p => p.Employees)
@@ -85,8 +82,7 @@ namespace Todo.Models
 
                 entity.Property(e => e.Name)
                     .IsRequired()
-                    .HasMaxLength(50)
-                    .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    .HasMaxLength(50);
             });
 
             modelBuilder.Entity<TodoList>(entity =>
@@ -102,9 +98,7 @@ namespace Todo.Models
                     .HasColumnType("datetime")
                     .HasDefaultValueSql("(getdate())");
 
-                entity.Property(e => e.Name)
-                    .IsRequired()
-                    .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                entity.Property(e => e.Name).IsRequired();
 
                 entity.Property(e => e.UpdateTime)
                     .HasColumnType("datetime")
@@ -121,6 +115,23 @@ namespace Todo.Models
                     .HasForeignKey(d => d.UpdateEmployeeId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Todo_ToTable_1");
+            });
+
+            modelBuilder.Entity<UploadFile>(entity =>
+            {
+                entity.ToTable("UploadFile");
+
+                entity.Property(e => e.UploadFileId).HasDefaultValueSql("(newid())");
+
+                entity.Property(e => e.Name).IsRequired();
+
+                entity.Property(e => e.Src).IsRequired();
+
+                entity.HasOne(d => d.Todo)
+                    .WithMany(p => p.UploadFiles)
+                    .HasForeignKey(d => d.TodoId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_File_ToTable");
             });
 
             OnModelCreatingPartial(modelBuilder);

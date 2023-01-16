@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Todo.Models;
 
 namespace Todo.Dto
@@ -13,6 +14,7 @@ namespace Todo.Dto
         public int Orders { get; set; }
         public string InsertEmployeeQName { get; set; }
         public string UpdateEmployeeQName { get; set; }
+        public ICollection<UploadFileDto> UploadFiles { get; set; }
 
     }
 }

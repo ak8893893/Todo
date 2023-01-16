@@ -7,6 +7,8 @@ using Microsoft.EntityFrameworkCore;
 using Todo.Dto;
 using AutoMapper;
 using Todo.Parameters;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using System.Xml.Linq;
 
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -34,7 +36,8 @@ namespace Todo.Controllers
         {
             var result = _todoContext.TodoLists.
                 Include(a => a.UpdateEmployee).
-                Include(a => a.InsertEmployee)
+                Include(a => a.InsertEmployee).
+                Include(a => a.UploadFiles)
                 .Select(a => a);
 
             // LINQ寫法
@@ -67,7 +70,7 @@ namespace Todo.Controllers
             return result.ToList().Select(a => ItemToDto(a));
         }
 
-        // AutoMapper接口
+        // AutoMapper接口  
         // GET: api/<TodoController>/AutoMapper
         [HttpGet("AutoMapper")]
         public IEnumerable<TodoListSelectDto> GetAutoMapper([FromQuery] TodoSelectParameters value)
@@ -75,6 +78,7 @@ namespace Todo.Controllers
             var result = _todoContext.TodoLists.
                 Include(a => a.UpdateEmployee).
                 Include(a => a.InsertEmployee)
+                .Include(a => a.UploadFiles)
                 .Select(a => a);
 
             if (!string.IsNullOrEmpty(value.name))
@@ -123,11 +127,27 @@ namespace Todo.Controllers
         {
             var result = (from a in _todoContext.TodoLists
                           where a.TodoId == id
-                          select a)
-                          .Include(a => a.UpdateEmployee)
-                          .Include(a => a.InsertEmployee)
-                          .SingleOrDefault();
-            return ItemToDto(result);
+                          select new TodoListSelectDto
+                          {
+                Enable = a.Enable,
+                InsertEmployeeQName = a.InsertEmployee.Name + "(" + a.InsertEmployeeId + ")",
+                InsertTime = a.InsertTime,
+                Name = a.Name,
+                Orders = a.Orders,
+                TodoId = a.TodoId,
+                UpdateEmployeeQName = a.UpdateEmployee.Name + "(" + a.UpdateEmployeeId + ")",
+                UpdateTime = a.UpdateTime,
+                UploadFiles = (from b in _todoContext.UploadFiles
+                               where a.TodoId == b.TodoId
+                               select new UploadFileDto
+                               {
+                                   Name = b.Name,
+                                   Src = b.Src,
+                                   TodoId = b.TodoId,
+                                   UploadFileId = b.UploadFileId,
+                               }).ToList()
+                          }).SingleOrDefault();
+            return result;
         }
 
         // 標籤功能
@@ -208,6 +228,22 @@ namespace Todo.Controllers
 
         private static TodoListSelectDto ItemToDto(TodoList a)
         {
+            List<UploadFileDto> updto = new List<UploadFileDto>();
+
+            foreach(var temp in a.UploadFiles) 
+            {
+                UploadFileDto up = new UploadFileDto
+                {
+                    Name= temp.Name,
+                    Src = temp.Src,
+                    TodoId= temp.TodoId,
+                    UploadFileId= temp.UploadFileId,
+                };
+                updto.Add(up);
+
+            
+            };
+
             return new TodoListSelectDto
             {
                 Enable = a.Enable,
@@ -217,7 +253,8 @@ namespace Todo.Controllers
                 Orders = a.Orders,
                 TodoId = a.TodoId,
                 UpdateEmployeeQName = a.UpdateEmployee.Name + "(" + a.UpdateEmployeeId + ")",
-                UpdateTime = a.UpdateTime
+                UpdateTime = a.UpdateTime,
+                UploadFiles = updto,
             };
         }
 

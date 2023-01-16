@@ -7,6 +7,11 @@ namespace Todo.Models
 {
     public partial class TodoList
     {
+        public TodoList()
+        {
+            UploadFiles = new HashSet<UploadFile>();
+        }
+
         public Guid TodoId { get; set; }
         public string Name { get; set; }
         public DateTime InsertTime { get; set; }
@@ -18,5 +23,6 @@ namespace Todo.Models
 
         public virtual Employee InsertEmployee { get; set; }
         public virtual Employee UpdateEmployee { get; set; }
+        public virtual ICollection<UploadFile> UploadFiles { get; set; }
     }
 }
