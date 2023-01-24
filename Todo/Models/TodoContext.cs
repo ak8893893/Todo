@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Todo.Dto;
 
 #nullable disable
 
@@ -23,6 +24,8 @@ namespace Todo.Models
         public virtual DbSet<TodoList> TodoLists { get; set; }
         public virtual DbSet<UploadFile> UploadFiles { get; set; }
 
+        public virtual DbSet<TodoListSelectDto> TodoListSelectDtos { get; set; }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
@@ -35,6 +38,8 @@ namespace Todo.Models
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.HasAnnotation("Relational:Collation", "SQL_Latin1_General_CP1_CI_AS");
+
+            modelBuilder.Entity<TodoListSelectDto>().HasNoKey();
 
             modelBuilder.Entity<Division>(entity =>
             {

@@ -19,10 +19,10 @@ namespace Todo.Controllers
     [ApiController]
     public class TodoController : ControllerBase
     {
-        private readonly TodoContext _todoContext;
+        private readonly TodoContext2 _todoContext;
         private readonly IMapper _iMapper;
 
-        public TodoController(TodoContext todoContext, IMapper iMapper)
+        public TodoController(TodoContext2 todoContext, IMapper iMapper)
         {
             _todoContext = todoContext;
             _iMapper = iMapper;
@@ -83,6 +83,33 @@ namespace Todo.Controllers
             }
 
             var result = _todoContext.TodoLists.FromSqlRaw(sql);
+
+            return result;
+        }
+
+        //讀取所有資料的API   使用SQL指令
+        // GET: api/<TodoController>/GetSQLDto
+        [HttpGet("GetSQLDto")]
+        public IEnumerable<TodoListSelectDto> GetSQLDto(string name)
+        {
+            string sql = @"select [TodoId]
+             ,a.[Name]
+             ,[InsertTime] 
+             ,[UpdateTime] 
+             ,[Enable]
+             ,[Orders]
+             ,b.Name as InsertEmployeeQName
+             ,c.Name as UpdateEmployeeQName
+                From [Todolist] a
+                join Employee b on a.InsertEmployeeId=b.EmployeeId
+                join Employee c on a.UpdateEmployeeId=c.EmployeeId where 1=1";
+
+            if (!string.IsNullOrWhiteSpace(name))                   // 如果query有輸入name 的值的話
+            {
+                sql = sql + "and name like N'%" + name + "%'"; // 包含name裡面的值的name 會被搜到
+            }
+
+            var result = _todoContext.TodoListSelectDtos.FromSqlRaw(sql);
 
             return result;
         }
