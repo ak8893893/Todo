@@ -70,6 +70,23 @@ namespace Todo.Controllers
             return result.ToList().Select(a => ItemToDto(a));
         }
 
+        //讀取所有資料的API   使用SQL指令
+        // GET: api/<TodoController>/GetSQL
+        [HttpGet("GetSQL")]
+        public IEnumerable<TodoList> GetSQL(string name)
+        {
+            string sql = "select * from todolist where 1=1";   // 先做一個基礎SQL語句 搜尋所有資料
+
+            if (!string.IsNullOrEmpty(name))                   // 如果query有輸入name 的值的話
+            {
+                sql = sql + "and name like N'%" + name + "%'"; // 包含name裡面的值的name 會被搜到
+            }
+
+            var result = _todoContext.TodoLists.FromSqlRaw(sql);
+
+            return result;
+        }
+
         // AutoMapper接口  
         // GET: api/<TodoController>/AutoMapper
         [HttpGet("AutoMapper")]
