@@ -19,10 +19,10 @@ namespace Todo.Controllers
     [ApiController]
     public class TodoController : ControllerBase
     {
-        private readonly TodoContext2 _todoContext;
+        private readonly TodoContext _todoContext;
         private readonly IMapper _iMapper;
 
-        public TodoController(TodoContext2 todoContext, IMapper iMapper)
+        public TodoController(TodoContext todoContext, IMapper iMapper)
         {
             _todoContext = todoContext;
             _iMapper = iMapper;
@@ -109,7 +109,7 @@ namespace Todo.Controllers
                 sql = sql + "and name like N'%" + name + "%'"; // 包含name裡面的值的name 會被搜到
             }
 
-            var result = _todoContext.TodoListSelectDtos.FromSqlRaw(sql);
+            var result = _todoContext.ExecSQL<TodoListSelectDto>(sql);
 
             return result;
         }
