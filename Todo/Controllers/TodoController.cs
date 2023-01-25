@@ -32,7 +32,7 @@ namespace Todo.Controllers
         //讀取所有資料的API
         // GET: api/<TodoController>
         [HttpGet]
-        public IEnumerable<TodoListSelectDto> Get([FromQuery] TodoSelectParameters value)
+        public IActionResult Get([FromQuery] TodoSelectParameters value)
         {
             var result = _todoContext.TodoLists.
                 Include(a => a.UpdateEmployee).
@@ -40,13 +40,6 @@ namespace Todo.Controllers
                 Include(a => a.UploadFiles)
                 .Select(a => a);
 
-            // LINQ寫法
-            //if(!string.IsNullOrEmpty(name) )
-            //{
-            //    result=result.Where(a=>a.Name.Contains(name));
-            //}
-
-            // C# 寫法
             if (!string.IsNullOrEmpty(value.name))
             {
                 result = result.Where(a => a.Name.IndexOf(value.name) > -1);
@@ -67,7 +60,49 @@ namespace Todo.Controllers
                 result = result.Where(a => a.Orders <= value.maxOrder && a.Orders >= value.minOrder);
             }
 
-            return result.ToList().Select(a => ItemToDto(a));
+            if (result == null || result.Count() <= 0) 
+            {
+                return NotFound("找不到資源");
+            }
+
+            return Ok(result.ToList().Select(a => ItemToDto(a)));
+        }
+
+        //讀取單筆資料的API
+        // GET api/<TodoController>/5
+        // 改成用 IActionResult
+        [HttpGet("{id}")]
+        public IActionResult GetTodoList(Guid id)
+        {
+            var result = (from a in _todoContext.TodoLists
+                          where a.TodoId == id
+                          select new TodoListSelectDto
+                          {
+                              Enable = a.Enable,
+                              InsertEmployeeQName = a.InsertEmployee.Name + "(" + a.InsertEmployeeId + ")",
+                              InsertTime = a.InsertTime,
+                              Name = a.Name,
+                              Orders = a.Orders,
+                              TodoId = a.TodoId,
+                              UpdateEmployeeQName = a.UpdateEmployee.Name + "(" + a.UpdateEmployeeId + ")",
+                              UpdateTime = a.UpdateTime,
+                              UploadFiles = (from b in _todoContext.UploadFiles
+                                             where a.TodoId == b.TodoId
+                                             select new UploadFileDto
+                                             {
+                                                 Name = b.Name,
+                                                 Src = b.Src,
+                                                 TodoId = b.TodoId,
+                                                 UploadFileId = b.UploadFileId,
+                                             }).ToList()
+                          }).SingleOrDefault();
+
+            if (result == null )
+            {
+                return NotFound("找不到ID: "+id.ToString()+" 的資料");
+            }
+
+            return Ok( result);
         }
 
         //讀取所有資料的API   使用SQL指令
@@ -164,35 +199,7 @@ namespace Todo.Controllers
             return _iMapper.Map<TodoListSelectDto>(result); ;
         }
 
-        //讀取單筆資料的API
-        // GET api/<TodoController>/5
-        [HttpGet("{id}")]
-        public TodoListSelectDto GetTodoList(Guid id)
-        {
-            var result = (from a in _todoContext.TodoLists
-                          where a.TodoId == id
-                          select new TodoListSelectDto
-                          {
-                Enable = a.Enable,
-                InsertEmployeeQName = a.InsertEmployee.Name + "(" + a.InsertEmployeeId + ")",
-                InsertTime = a.InsertTime,
-                Name = a.Name,
-                Orders = a.Orders,
-                TodoId = a.TodoId,
-                UpdateEmployeeQName = a.UpdateEmployee.Name + "(" + a.UpdateEmployeeId + ")",
-                UpdateTime = a.UpdateTime,
-                UploadFiles = (from b in _todoContext.UploadFiles
-                               where a.TodoId == b.TodoId
-                               select new UploadFileDto
-                               {
-                                   Name = b.Name,
-                                   Src = b.Src,
-                                   TodoId = b.TodoId,
-                                   UploadFileId = b.UploadFileId,
-                               }).ToList()
-                          }).SingleOrDefault();
-            return result;
-        }
+
 
         // 標籤功能
         // GET api/<TodoController>/From/5
