@@ -223,10 +223,28 @@ namespace Todo.Controllers
         [HttpPost]
         public ActionResult<TodoList> Post([FromBody] TodoList value)
         {
-            _todoContext.TodoLists.Add(value);
+
+            // 將資料進行轉譯後再放入資料庫
+            TodoList insert = new TodoList
+            {
+                // 先決定哪些資料是使用者可以填入的
+                Name= value.Name,
+                Enable= value.Enable,
+                Orders= value.Orders,
+
+                // 再來把系統決定的值放入
+                InsertTime = DateTime.Now,
+                UpdateTime = DateTime.Now,
+                
+                // 因為還沒有做使用者身分認證  所以身分的部分先寫死
+                InsertEmployeeId = Guid.Parse("00000000-0000-0000-0000-000000000001"),
+                UpdateEmployeeId = Guid.Parse("59308743-99e0-4d5a-b611-b0a7facaf21e"),
+            };
+
+            _todoContext.TodoLists.Add(insert);
             _todoContext.SaveChanges();
 
-            return CreatedAtAction(nameof(GetTodoList), new { id = value.TodoId }, value);
+            return CreatedAtAction(nameof(GetTodoList), new { id = insert.TodoId }, insert);
         }
 
         //更新資料
