@@ -60,7 +60,7 @@ namespace Todo.Controllers
                 result = result.Where(a => a.Orders <= value.maxOrder && a.Orders >= value.minOrder);
             }
 
-            if (result == null || result.Count() <= 0) 
+            if (result == null || result.Count() <= 0)
             {
                 return NotFound("找不到資源");
             }
@@ -97,12 +97,12 @@ namespace Todo.Controllers
                                              }).ToList()
                           }).SingleOrDefault();
 
-            if (result == null )
+            if (result == null)
             {
-                return NotFound("找不到ID: "+id.ToString()+" 的資料");
+                return NotFound("找不到ID: " + id.ToString() + " 的資料");
             }
 
-            return Ok( result);
+            return Ok(result);
         }
 
         //讀取所有資料的API   使用SQL指令
@@ -228,17 +228,20 @@ namespace Todo.Controllers
             TodoList insert = new TodoList
             {
                 // 先決定哪些資料是使用者可以填入的
-                Name= value.Name,
-                Enable= value.Enable,
-                Orders= value.Orders,
+                Name = value.Name,
+                Enable = value.Enable,
+                Orders = value.Orders,
 
                 // 再來把系統決定的值放入
                 InsertTime = DateTime.Now,
                 UpdateTime = DateTime.Now,
-                
+
                 // 因為還沒有做使用者身分認證  所以身分的部分先寫死
                 InsertEmployeeId = Guid.Parse("00000000-0000-0000-0000-000000000001"),
                 UpdateEmployeeId = Guid.Parse("59308743-99e0-4d5a-b611-b0a7facaf21e"),
+
+                // 同時新增子資料
+                UploadFiles= value.UploadFiles,
             };
 
             _todoContext.TodoLists.Add(insert);
@@ -246,6 +249,33 @@ namespace Todo.Controllers
 
             return CreatedAtAction(nameof(GetTodoList), new { id = insert.TodoId }, insert);
         }
+
+        // 新增子資料
+        // POST api/<TodoController>/UploadFile/{TodoId}
+        [HttpPost("UploadFile/{TodoId}")]
+        public ActionResult<UploadFile> PostChild(Guid TodoId,[FromBody] UploadFile value)
+        {
+            // 先檢查有沒有這筆父資料
+            if(!_todoContext.TodoLists.Any(a=>a.TodoId == TodoId))
+            {
+                return NotFound("沒有這筆資料 ID: " + TodoId.ToString());
+            }
+
+            // 將資料進行轉譯後再放入資料庫
+            UploadFile insert = new UploadFile
+            {
+                // 先決定哪些資料是使用者可以填入的
+                Name = value.Name,
+                Src = value.Src,    // 上傳檔案路徑這個之後教
+                TodoId = TodoId     
+            };
+
+            _todoContext.UploadFiles.Add(insert);
+            _todoContext.SaveChanges();
+
+            return CreatedAtAction(nameof(GetTodoList), new { id = insert.TodoId }, insert);
+        }
+
 
         //更新資料
         // PUT api/<TodoController>/5

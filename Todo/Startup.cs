@@ -7,11 +7,14 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Todo.Models;
+using Microsoft.AspNetCore.Mvc.NewtonsoftJson;
+using System.Text.Json.Serialization;
 
 namespace Todo
 {
@@ -31,6 +34,9 @@ namespace Todo
             services.AddControllers();
             services.AddDbContext<TodoContext>(options => options.UseSqlServer(Configuration.GetConnectionString("TodoDatabase")));
             services.AddAutoMapper(typeof(Startup));
+
+            services.AddControllers().AddJsonOptions(x =>
+   x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
