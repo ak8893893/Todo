@@ -85,8 +85,24 @@ namespace Todo.Controllers
         //
         // api/<TodoUploadFileController>
         [HttpPost]
-        public void Post([FromBody] string value)
+        public string Post(Guid TodoId, [FromBody] UploadFile value)
         {
+            if (!_todoContext.TodoLists.All(a => a.TodoId == TodoId))
+            {
+                return "找不到該事項";
+            }
+
+            UploadFile insert = new UploadFile
+            {
+                Name = value.Name,
+                Src = value.Src,
+                TodoId = value.TodoId,
+            };
+
+            _todoContext.UploadFiles.Add(insert);
+            _todoContext.SaveChanges();
+
+            return "ok";
         }
 
         // PUT api/<TodoUploadFileController>/5

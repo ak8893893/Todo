@@ -35,8 +35,14 @@ namespace Todo
             services.AddDbContext<TodoContext>(options => options.UseSqlServer(Configuration.GetConnectionString("TodoDatabase")));
             services.AddAutoMapper(typeof(Startup));
 
-            services.AddControllers().AddJsonOptions(x =>
-   x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve);
+            // 加下面這個避免net5跳錯
+   //         services.AddControllers().AddJsonOptions(x =>
+   //x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve);
+
+            // 加下面這個避免net5跳錯
+            services.AddControllersWithViews().AddNewtonsoftJson(options=>
+            options.SerializerSettings.ReferenceLoopHandling=
+            Newtonsoft.Json.ReferenceLoopHandling.Ignore);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

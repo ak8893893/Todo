@@ -241,7 +241,7 @@ namespace Todo.Controllers
                 UpdateEmployeeId = Guid.Parse("59308743-99e0-4d5a-b611-b0a7facaf21e"),
 
                 // 同時新增子資料
-                UploadFiles= value.UploadFiles,
+                UploadFiles = value.UploadFiles,
             };
 
             _todoContext.TodoLists.Add(insert);
@@ -253,10 +253,10 @@ namespace Todo.Controllers
         // 新增子資料
         // POST api/<TodoController>/UploadFile/{TodoId}
         [HttpPost("UploadFile/{TodoId}")]
-        public ActionResult<UploadFile> PostChild(Guid TodoId,[FromBody] UploadFile value)
+        public ActionResult<UploadFile> PostChild(Guid TodoId, [FromBody] UploadFile value)
         {
             // 先檢查有沒有這筆父資料
-            if(!_todoContext.TodoLists.Any(a=>a.TodoId == TodoId))
+            if (!_todoContext.TodoLists.Any(a => a.TodoId == TodoId))
             {
                 return NotFound("沒有這筆資料 ID: " + TodoId.ToString());
             }
@@ -267,7 +267,7 @@ namespace Todo.Controllers
                 // 先決定哪些資料是使用者可以填入的
                 Name = value.Name,
                 Src = value.Src,    // 上傳檔案路徑這個之後教
-                TodoId = TodoId     
+                TodoId = TodoId
             };
 
             _todoContext.UploadFiles.Add(insert);
@@ -276,6 +276,57 @@ namespace Todo.Controllers
             return CreatedAtAction(nameof(GetTodoList), new { id = insert.TodoId }, insert);
         }
 
+        // 同時新增父子資料 在沒有FK(外鍵的情況)
+        // POST api/<TodoController>/Nofk
+        [HttpPost("Nofk")]
+        public ActionResult<TodoList> PostNoFK([FromBody] TodoList value)
+        {
+            // 分成兩個階段 先做好爸爸 存檔後取得爸爸的todoID再新增兒子進去爸爸下面
+
+            // 爸爸部分
+            
+            // 將資料進行轉譯後再放入資料庫
+            TodoList insert = new TodoList
+            {
+                // 先決定哪些資料是使用者可以填入的
+                Name = value.Name,
+                Enable = value.Enable,
+                Orders = value.Orders,
+
+                // 再來把系統決定的值放入
+                InsertTime = DateTime.Now,
+                UpdateTime = DateTime.Now,
+
+                // 因為還沒有做使用者身分認證  所以身分的部分先寫死
+                InsertEmployeeId = Guid.Parse("00000000-0000-0000-0000-000000000001"),
+                UpdateEmployeeId = Guid.Parse("59308743-99e0-4d5a-b611-b0a7facaf21e"),
+
+                // 同時新增子資料 但因為我們這邊要當作沒有外鍵 所以先註解(沒外鍵的狀況下做了也不會有事情發生)
+                //UploadFiles = value.UploadFiles,
+            };
+
+            // 把爸爸的資料放入資料庫後存檔
+            _todoContext.TodoLists.Add(insert);
+            _todoContext.SaveChanges();
+
+
+            // 兒子部分
+            foreach (var temp in value.UploadFiles)
+            {
+                UploadFile insert2 = new UploadFile
+                {
+                    Name = temp.Name,
+                    Src = temp.Src,
+                    TodoId = insert.TodoId,
+                };
+                _todoContext.UploadFiles.Add(insert2);  // 加入資料庫
+            }
+
+            // 存檔
+            _todoContext.SaveChanges();
+
+            return CreatedAtAction(nameof(GetTodoList), new { id = insert.TodoId }, insert);
+        }
 
         //更新資料
         // PUT api/<TodoController>/5
