@@ -35,11 +35,11 @@ namespace Todo
             services.AddDbContext<TodoContext>(options => options.UseSqlServer(Configuration.GetConnectionString("TodoDatabase")));
             services.AddAutoMapper(typeof(Startup));
 
-            // 加下面這個避免net5跳錯
+            // 加下面這個避免net5跳錯 (這個會多$id)
    //         services.AddControllers().AddJsonOptions(x =>
    //x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve);
 
-            // 加下面這個避免net5跳錯
+            // 加下面這個避免net5跳錯 (這個不會)
             services.AddControllersWithViews().AddNewtonsoftJson(options=>
             options.SerializerSettings.ReferenceLoopHandling=
             Newtonsoft.Json.ReferenceLoopHandling.Ignore);
