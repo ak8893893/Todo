@@ -16,6 +16,7 @@ namespace Todo.Profiles
                 a => a.UpdateEmployeeQName,
                 b => b.MapFrom(c => c.UpdateEmployee.Name + "(" + c.UpdateEmployeeId + ")"))
                 ;
+            CreateMap<TodoListPostDto, TodoList>();
         }
     }
 }

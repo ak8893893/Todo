@@ -276,6 +276,30 @@ namespace Todo.Controllers
             return CreatedAtAction(nameof(GetTodoList), new { id = insert.TodoId }, insert);
         }
 
+
+        // 新增子資料 AutoMapper
+        // POST api/<TodoController>/UploadFile/{TodoId}
+        [HttpPost("UploadFileAutoMapper/{TodoId}")]
+        public ActionResult<UploadFile> PostChildAutoMapper(Guid TodoId, [FromBody] UploadFilePostDto value)
+        {
+            // 先檢查有沒有這筆父資料
+            if (!_todoContext.TodoLists.Any(a => a.TodoId == TodoId))
+            {
+                return NotFound("沒有這筆資料 ID: " + TodoId.ToString());
+            }
+
+            var map = _iMapper.Map<UploadFile>(value);
+
+            map.TodoId = TodoId; // 要給這筆資料TodoId才能放進去
+
+            _todoContext.UploadFiles.Add(map);
+            _todoContext.SaveChanges();
+
+            return CreatedAtAction(nameof(GetTodoList), new { id = map.TodoId }, map);
+        }
+
+
+
         // 同時新增父子資料 在沒有FK(外鍵的情況)
         // POST api/<TodoController>/Nofk
         [HttpPost("Nofk")]
@@ -370,6 +394,28 @@ namespace Todo.Controllers
             _todoContext.SaveChanges();
 
             return CreatedAtAction(nameof(GetTodoList), new { id = insert.TodoId }, insert);
+        }
+
+        // Post AutoMapper
+        // POST api/<TodoController>/AutoMapperPost
+        [HttpPost("AutoMapperPost")]
+        public ActionResult<TodoList> PostAutoMapper([FromBody] TodoListPostDto value)
+        {
+            var map = _iMapper.Map<TodoList>(value);
+
+            // 再來把系統決定的值放入
+            map.InsertTime = DateTime.Now;
+            map.UpdateTime = DateTime.Now;
+
+            // 因為還沒有做使用者身分認證  所以身分的部分先寫死
+            map.InsertEmployeeId = Guid.Parse("00000000-0000-0000-0000-000000000001");
+            map.UpdateEmployeeId = Guid.Parse("59308743-99e0-4d5a-b611-b0a7facaf21e");
+
+            // 把父子資料放入資料庫後存檔
+            _todoContext.TodoLists.Add(map);
+            _todoContext.SaveChanges();
+
+            return CreatedAtAction(nameof(GetTodoList), new { id = map.TodoId }, map);
         }
 
         //更新資料
