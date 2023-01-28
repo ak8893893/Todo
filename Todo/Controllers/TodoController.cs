@@ -416,7 +416,46 @@ namespace Todo.Controllers
             _todoContext.SaveChanges();
 
             return CreatedAtAction(nameof(GetTodoList), new { id = map.TodoId }, map);
-        } 
+        }
+
+        // 使用內建的函式進行對應來新增資料 .CurrentValues.SetValues()
+        // POST api/<TodoController>/DefaultMapperPost
+        [HttpPost("DefaultMapperPost")]
+        public ActionResult<TodoList> DefaultMapperPost([FromBody] TodoListPostDto value)
+        {
+
+            TodoList insert = new TodoList {
+
+            // 再來把系統決定的值放入
+            InsertTime = DateTime.Now,
+            UpdateTime = DateTime.Now,
+
+            // 因為還沒有做使用者身分認證  所以身分的部分先寫死
+            InsertEmployeeId = Guid.Parse("00000000-0000-0000-0000-000000000001"),
+            UpdateEmployeeId = Guid.Parse("59308743-99e0-4d5a-b611-b0a7facaf21e"),
+
+        };
+
+
+            // 把父資料放入資料庫後存檔
+            _todoContext.TodoLists.Add(insert).CurrentValues.SetValues(value);  // 用這個內建的函式只能放值到有對應名稱的欄位 沒對應到的欄位(例如子資料 就要存檔後再另外添加)
+            _todoContext.SaveChanges();
+
+            // 把沒有對應到名稱的資料用迴圈放入 由於子資料裡面的名稱都對應的到所以不用手動田填入
+            foreach(var temp in value.UploadFiles)
+            {
+                _todoContext.UploadFiles.Add(new UploadFile
+                {
+                    TodoId = insert.TodoId        // TodoID是我們剛剛新增的那一筆資料  所以要在存檔後取得他的todoID拿來放入這筆子資料的FK
+                }).CurrentValues.SetValues(temp); // 把剩餘的資料用內建函式進行對應放入
+                
+            }
+
+            _todoContext.SaveChanges();           // 所有子資料都放入後進行存檔
+
+
+            return CreatedAtAction(nameof(GetTodoList), new { id = insert.TodoId }, insert);
+        }
 
         //更新資料
         // PUT api/<TodoController>/5
