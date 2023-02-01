@@ -9,6 +9,7 @@ using AutoMapper;
 using Todo.Parameters;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using System.Xml.Linq;
+using Microsoft.Data.SqlClient;
 
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -455,6 +456,41 @@ namespace Todo.Controllers
 
 
             return CreatedAtAction(nameof(GetTodoList), new { id = insert.TodoId }, insert);
+        }
+
+        // 使用SQL來新增資料 .CurrentValues.SetValues()  這邊只示範父親的部分就好  子資料就一樣的方式去下SQL指令
+        // POST api/<TodoController>/DefaultMapperPost
+        [HttpPost("PostSQL")]
+        public ActionResult<TodoList> PostSQL([FromBody] TodoListPostDto value)
+        {
+
+            // 這邊如果有一些攻擊性的語法一樣是幫你轉換成單純字串
+            var name = new SqlParameter("name", value.Name);
+
+            // SQL insert 資料如下
+            string sql = @"INSERT INTO [dbo].[TodoList]
+            ([Name]
+            ,[InsertTime]
+            ,[UpdateTime]
+            ,[Enable]
+            ,[Orders]
+            ,[InsertEmployeeId]
+            ,[UpdateEmployeeId])
+            VALUES
+            (@name,'"+DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")+"','"+DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")+"','"+value.Enable+"',"+value.Orders+ ",'00000000-0000-0000-0000-000000000001','59308743-99e0-4d5a-b611-b0a7facaf21e')";
+            // 加個N 避免編碼出現問題中文會變成????
+            // @name 就是跟上面那個sqlParameter一樣名字的那個資料
+
+
+            // 發送SQL指令後就執行了   所以不用另外存  
+            // 如果後面有很多可以放入很多
+            var result = _todoContext.Database.ExecuteSqlRaw(sql,name );
+            
+
+            
+
+
+            return Ok(result);
         }
 
         //更新資料
