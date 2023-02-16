@@ -528,7 +528,7 @@ namespace Todo.Controllers
             return Ok(result);
         }
 
-        //更新資料
+        //更新資料  最初始範例  但這邊使用者可以決定所有資料欄位  所以要用DTO來接收資料再轉 或是先過濾過
         // PUT api/<TodoController>/5
         [HttpPut("{id}")]
         public IActionResult Put(Guid id, [FromBody] TodoList value)
@@ -538,7 +538,9 @@ namespace Todo.Controllers
                 return BadRequest("url id 與 body ID 不符合");
             }
 
-            _todoContext.Entry(value).State = EntityState.Modified; // 修改新得到的值
+            _todoContext.Entry(value).State = EntityState.Modified; // 修改新得到的值 這個寫法是自動找到內容進行更新
+
+            // _todoContext.TodoLists.Update(value); // 這個寫法也可以  可以直覺知道是更新什麼資料
 
             try
             {
@@ -559,6 +561,69 @@ namespace Todo.Controllers
 
             return NoContent();                     // 成功存取後回傳 204 NoContent
         }
+
+
+        //更新資料  最初始範例  但這邊使用者可以決定所有資料欄位  所以要用DTO來接收資料再轉才對
+        // PUT api/<TodoController>/5
+        [HttpPut("PutFiliter/{id}")]
+        public IActionResult PutFiliter(Guid id, [FromBody] TodoList value)
+        {
+            if (id != value.TodoId)
+            {
+                return BadRequest("url id 與 body ID 不符合");
+            }
+
+            // 先找到這筆資料
+            var update = _todoContext.TodoLists.Find(id);
+
+            // 找資料的另外一種寫法
+            //var update = (from a in _todoContext.TodoLists
+            //              where a.TodoId == id                  // 這邊就可以自訂搜尋條件
+            //              select a).SingleOrDefault();
+
+            if (update != null)
+            {
+
+                // 先決定哪些資料是使用者可以填入的  修改這筆資料
+                update.Name = value.Name;
+                update.Enable = value.Enable;
+                update.Orders = value.Orders;
+
+                // 再來把系統決定的值放入
+                update.InsertTime = DateTime.Now;
+                update.UpdateTime = DateTime.Now;
+
+                // 因為還沒有做使用者身分認證  所以身分的部分先寫死
+                update.InsertEmployeeId = Guid.Parse("00000000-0000-0000-0000-000000000001");
+                update.UpdateEmployeeId = Guid.Parse("59308743-99e0-4d5a-b611-b0a7facaf21e");
+
+                try
+                {
+                    _todoContext.SaveChanges();         // 將更新後的新資料存入資料庫
+                }
+                catch (DbUpdateException)
+                {
+                    if (!_todoContext.TodoLists.Any(e => e.TodoId == id))  // 如果傳入的id 找不到任何一樣 回傳沒找到該筆資料 
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        return StatusCode(500, "存取發生錯誤");             // 如果都有也都合法 還是失敗 回傳伺服器端存取有問題 
+                    }
+
+                }
+
+                return NoContent();                     // 成功存取後回傳 204 NoContent
+            }
+
+            else
+            {
+                return NotFound();
+            }
+        }
+
+
 
         // 刪除資料
         // DELETE api/<TodoController>/5
