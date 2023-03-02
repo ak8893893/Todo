@@ -725,9 +725,6 @@ namespace Todo.Controllers
             if (update != null)
             {
                 
-
-                
-
                 // 把系統決定的值放入
                 update.InsertTime = DateTime.Now;
                 update.UpdateTime = DateTime.Now;
