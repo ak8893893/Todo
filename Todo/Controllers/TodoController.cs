@@ -563,7 +563,7 @@ namespace Todo.Controllers
         }
 
 
-        // PUT api/<TodoController>/5
+        // PUT api/<TodoController>/PutFiliter/5
         [HttpPut("PutFiliter/{id}")]
         public IActionResult PutFiliter(Guid id, [FromBody] TodoListPutDto value)
         {
@@ -623,7 +623,7 @@ namespace Todo.Controllers
         }
 
         // 寫一個沒有帶ID在query的
-        // PUT api/<TodoController>/5
+        // PUT api/<TodoController>/Put
         [HttpPut("Put")]
         public IActionResult Put([FromBody] TodoListPutDto value)
         {
@@ -678,6 +678,34 @@ namespace Todo.Controllers
             }
         }
 
+
+        // AutoMapper版本
+        // PUT api/<TodoController>/PutAutoMapper
+        [HttpPut("PutAutoMapper")]
+        public IActionResult PutAutoMapper([FromBody] TodoListPutDto value)
+        {
+
+            // 先找到這筆資料
+            var update = _todoContext.TodoLists.Find(value.TodoId);
+
+            // 找資料的另外一種寫法
+            //var update = (from a in _todoContext.TodoLists
+            //              where a.TodoId == id                  // 這邊就可以自訂搜尋條件
+            //              select a).SingleOrDefault();
+
+            if (update != null)
+            {
+                _iMapper.Map(value, update);
+                _todoContext.SaveChanges();
+
+                return NoContent();
+            }
+
+            else
+            {
+                return NotFound();
+            }
+        }
 
 
         // 刪除資料
