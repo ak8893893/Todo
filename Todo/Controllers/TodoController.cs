@@ -707,6 +707,52 @@ namespace Todo.Controllers
             }
         }
 
+        // 內建函式庫更新版本
+        // PUT api/<TodoController>/PutDefault
+        [HttpPut("PutDefault")]
+        public IActionResult PutDefault([FromBody] TodoListPutDto value)
+        {
+
+            // 先找到這筆資料
+            var update = _todoContext.TodoLists.Find(value.TodoId);
+
+            // 找資料的另外一種寫法
+            //var update = (from a in _todoContext.TodoLists
+            //              where a.TodoId == id                  // 這邊就可以自訂搜尋條件
+            //              select a).SingleOrDefault();
+
+            if (update != null)
+            {
+                
+
+                
+
+                // 把系統決定的值放入
+                update.InsertTime = DateTime.Now;
+                update.UpdateTime = DateTime.Now;
+
+                // 因為還沒有做使用者身分認證  所以身分的部分先寫死
+                update.InsertEmployeeId = Guid.Parse("00000000-0000-0000-0000-000000000001");
+                update.UpdateEmployeeId = Guid.Parse("59308743-99e0-4d5a-b611-b0a7facaf21e");
+
+
+                // 決定哪些資料是使用者可以填入的  修改這筆資料 但我們使用新方式來處理很多筆的狀況
+                //update.Name = value.Name;
+                //update.Enable = value.Enable;
+                //update.Orders = value.Orders;
+                _todoContext.TodoLists.Update(update).CurrentValues.SetValues(value);
+
+                _todoContext.SaveChanges();
+
+                return NoContent();
+            }
+
+            else
+            {
+                return NotFound();
+            }
+        }
+
 
         // 刪除資料
         // DELETE api/<TodoController>/5
