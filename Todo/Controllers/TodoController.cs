@@ -11,6 +11,7 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using System.Xml.Linq;
 using Microsoft.Data.SqlClient;
 using Newtonsoft.Json;
+using Microsoft.AspNetCore.JsonPatch;
 
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -741,6 +742,42 @@ namespace Todo.Controllers
                 //update.Enable = value.Enable;
                 //update.Orders = value.Orders;
                 _todoContext.TodoLists.Update(update).CurrentValues.SetValues(value);
+
+                _todoContext.SaveChanges();
+
+                return NoContent();
+            }
+
+            else
+            {
+                return NotFound();
+            }
+        }
+
+        // Patch更新指定資料
+        // Patch api/<TodoController>/Patch/5
+        [HttpPatch("Patch/{id}")]
+        public IActionResult Patch(Guid id,[FromBody] JsonPatchDocument value)
+        {
+
+            // 先找到這筆資料
+            var update = _todoContext.TodoLists.Find(id);
+
+            // 找資料的另外一種寫法
+            //var update = (from a in _todoContext.TodoLists
+            //              where a.TodoId == id                  // 這邊就可以自訂搜尋條件
+            //              select a).SingleOrDefault();
+
+            if (update != null)
+            {
+
+                // 把系統決定的值放入
+                update.UpdateTime = DateTime.Now;
+
+                // 因為還沒有做使用者身分認證  所以身分的部分先寫死
+                update.UpdateEmployeeId = Guid.Parse("59308743-99e0-4d5a-b611-b0a7facaf21e");
+
+                value.ApplyTo(update);
 
                 _todoContext.SaveChanges();
 
