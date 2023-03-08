@@ -135,7 +135,7 @@ namespace Todo.Models
                 entity.HasOne(d => d.Todo)
                     .WithMany(p => p.UploadFiles)
                     .HasForeignKey(d => d.TodoId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    //.OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_File_ToTable");
             });
 

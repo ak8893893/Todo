@@ -345,7 +345,7 @@ namespace Todo.Controllers
             // 分成兩個階段 先做好爸爸 存檔後取得爸爸的todoID再新增兒子進去爸爸下面
 
             // 爸爸部分
-            
+
             // 將資料進行轉譯後再放入資料庫
             TodoList insert = new TodoList
             {
@@ -461,17 +461,18 @@ namespace Todo.Controllers
         public ActionResult<TodoList> DefaultMapperPost([FromBody] TodoListPostDto value)
         {
 
-            TodoList insert = new TodoList {
+            TodoList insert = new TodoList
+            {
 
-            // 再來把系統決定的值放入
-            InsertTime = DateTime.Now,
-            UpdateTime = DateTime.Now,
+                // 再來把系統決定的值放入
+                InsertTime = DateTime.Now,
+                UpdateTime = DateTime.Now,
 
-            // 因為還沒有做使用者身分認證  所以身分的部分先寫死
-            InsertEmployeeId = Guid.Parse("00000000-0000-0000-0000-000000000001"),
-            UpdateEmployeeId = Guid.Parse("59308743-99e0-4d5a-b611-b0a7facaf21e"),
+                // 因為還沒有做使用者身分認證  所以身分的部分先寫死
+                InsertEmployeeId = Guid.Parse("00000000-0000-0000-0000-000000000001"),
+                UpdateEmployeeId = Guid.Parse("59308743-99e0-4d5a-b611-b0a7facaf21e"),
 
-        };
+            };
 
 
             // 把父資料放入資料庫後存檔
@@ -479,13 +480,13 @@ namespace Todo.Controllers
             _todoContext.SaveChanges();
 
             // 把沒有對應到名稱的資料用迴圈放入 由於子資料裡面的名稱都對應的到所以不用手動田填入
-            foreach(var temp in value.UploadFiles)
+            foreach (var temp in value.UploadFiles)
             {
                 _todoContext.UploadFiles.Add(new UploadFile
                 {
                     TodoId = insert.TodoId        // TodoID是我們剛剛新增的那一筆資料  所以要在存檔後取得他的todoID拿來放入這筆子資料的FK
                 }).CurrentValues.SetValues(temp); // 把剩餘的資料用內建函式進行對應放入
-                
+
             }
 
             _todoContext.SaveChanges();           // 所有子資料都放入後進行存檔
@@ -513,17 +514,17 @@ namespace Todo.Controllers
             ,[InsertEmployeeId]
             ,[UpdateEmployeeId])
             VALUES
-            (@name,'"+DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")+"','"+DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")+"','"+value.Enable+"',"+value.Orders+ ",'00000000-0000-0000-0000-000000000001','59308743-99e0-4d5a-b611-b0a7facaf21e')";
+            (@name,'" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "','" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "','" + value.Enable + "'," + value.Orders + ",'00000000-0000-0000-0000-000000000001','59308743-99e0-4d5a-b611-b0a7facaf21e')";
             // 加個N 避免編碼出現問題中文會變成????
             // @name 就是跟上面那個sqlParameter一樣名字的那個資料
 
 
             // 發送SQL指令後就執行了   所以不用另外存  
             // 如果後面有很多可以放入很多
-            var result = _todoContext.Database.ExecuteSqlRaw(sql,name );
-            
+            var result = _todoContext.Database.ExecuteSqlRaw(sql, name);
 
-            
+
+
 
 
             return Ok(result);
@@ -724,7 +725,7 @@ namespace Todo.Controllers
 
             if (update != null)
             {
-                
+
                 // 把系統決定的值放入
                 update.InsertTime = DateTime.Now;
                 update.UpdateTime = DateTime.Now;
@@ -754,7 +755,7 @@ namespace Todo.Controllers
         // Patch更新指定資料
         // Patch api/<TodoController>/Patch/5
         [HttpPatch("Patch/{id}")]
-        public IActionResult Patch(Guid id,[FromBody] JsonPatchDocument value)
+        public IActionResult Patch(Guid id, [FromBody] JsonPatchDocument value)
         {
 
             // 先找到這筆資料
@@ -804,22 +805,45 @@ namespace Todo.Controllers
             return NoContent();
         }
 
+        // 刪除資料 同時刪除父子資料
+        // DELETE api/<TodoController>/fatherSon/5
+        [HttpDelete("fatherSon/{id}")]
+        public IActionResult fatherSon(Guid id)
+        {
+            var delete = (from a in _todoContext.TodoLists
+                          where a.TodoId == id
+                          select a).Include(c => c.UploadFiles).SingleOrDefault();
+
+            if (delete != null)
+            {
+                _todoContext.TodoLists.Remove(delete);
+                _todoContext.SaveChanges();
+                return NoContent();
+            }
+
+            else
+            {
+                return NotFound();
+            }
+        }
+
+
         private static TodoListSelectDto ItemToDto(TodoList a)
         {
             List<UploadFileDto> updto = new List<UploadFileDto>();
 
-            foreach(var temp in a.UploadFiles) 
+            foreach (var temp in a.UploadFiles)
             {
                 UploadFileDto up = new UploadFileDto
                 {
-                    Name= temp.Name,
+                    Name = temp.Name,
                     Src = temp.Src,
-                    TodoId= temp.TodoId,
-                    UploadFileId= temp.UploadFileId,
+                    TodoId = temp.TodoId,
+                    UploadFileId = temp.UploadFileId,
                 };
                 updto.Add(up);
 
-            
+
             };
 
             return new TodoListSelectDto
