@@ -1,18 +1,16 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Todo.Models;
-using System;
-using Microsoft.EntityFrameworkCore;
 using Todo.Dto;
-using AutoMapper;
+using Todo.Models;
 using Todo.Parameters;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
-using System.Xml.Linq;
-using Microsoft.Data.SqlClient;
-using Newtonsoft.Json;
-using Microsoft.AspNetCore.JsonPatch;
-
+using System.Text.Json;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -828,7 +826,7 @@ namespace Todo.Controllers
             }
         }
 
-        // 刪除資料 同時刪除多筆資料
+        // 刪除資料 同時刪除多筆子資料
         // DELETE api/<TodoController>/nofk/5
         [HttpDelete("nofk/{id}")]
         public IActionResult nofk(Guid id)
@@ -859,6 +857,32 @@ namespace Todo.Controllers
             }
 
              
+
+            else
+            {
+                return NotFound();
+            }
+        }
+
+        // 刪除資料 同時刪除多筆資料
+        // DELETE api/<TodoController>/list/5
+        [HttpDelete("list/{ids}")]
+        public IActionResult list(string ids)
+        {
+            List<Guid> deleteList = System.Text.Json.JsonSerializer.Deserialize<List<Guid>>(ids);
+
+            var delete = (from a in _todoContext.TodoLists
+                          where deleteList.Contains(a.TodoId)
+                          select a).Include(c => c.UploadFiles);
+
+            if (delete != null)
+            {
+                _todoContext.TodoLists.RemoveRange(delete);
+                _todoContext.SaveChanges();
+                return NoContent();
+            }
+
+
 
             else
             {
