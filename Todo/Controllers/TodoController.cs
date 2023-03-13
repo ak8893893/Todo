@@ -828,6 +828,44 @@ namespace Todo.Controllers
             }
         }
 
+        // 刪除資料 同時刪除多筆資料
+        // DELETE api/<TodoController>/nofk/5
+        [HttpDelete("nofk/{id}")]
+        public IActionResult nofk(Guid id)
+        {
+
+            
+
+            // 先刪兒子(如果沒有設外鍵的狀況下  先刪哪一個都沒關係)
+            var child = from a in _todoContext.UploadFiles
+                        where a.TodoId == id
+                        select a;
+
+            // RemoveRange 可以一次刪除多筆    Remove 只會刪掉一筆
+            _todoContext.UploadFiles.RemoveRange(child);
+            _todoContext.SaveChanges();
+
+            // 因為沒設外鍵  就不會有 .(c => c.UploadFiles)
+            var delete = (from a in _todoContext.TodoLists
+                          where a.TodoId == id
+                          //select a).Include(c => c.UploadFiles).SingleOrDefault();
+                          select a).SingleOrDefault();
+
+            if (delete != null)
+            {
+                _todoContext.TodoLists.Remove(delete);
+                _todoContext.SaveChanges();
+                return NoContent();
+            }
+
+             
+
+            else
+            {
+                return NotFound();
+            }
+        }
+
 
         private static TodoListSelectDto ItemToDto(TodoList a)
         {

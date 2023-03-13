@@ -7,8 +7,8 @@ namespace Todo.Dto
 {
     public class TodoListPostDto
     {
-        [RegularExpression("[a-z]")] // 字元要在 a-z 才能過
-        [EmailAddress(ErrorMessage ="名字請輸入電子信箱")]
+        //[RegularExpression("[a-z]")] // 字元要在 a-z 才能過
+        //[EmailAddress(ErrorMessage ="名字請輸入電子信箱")]
         public string Name { get; set; }
         public bool Enable { get; set; }
         [Range(0,100)]
