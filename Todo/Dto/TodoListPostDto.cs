@@ -6,6 +6,8 @@ using Todo.ValidationAttributes;
 
 namespace Todo.Dto
 {
+    [StartEnd]
+    [Test(Tvalue = "good")]
     public class TodoListPostDto
     {
         //[RegularExpression("[a-z]")] // 字元要在 a-z 才能過
@@ -18,6 +20,9 @@ namespace Todo.Dto
         [Range(0,100)]
         public int Orders { get; set; }
         public ICollection<UploadFilePostDto> UploadFiles { get; set; }
+
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
 
     }
 }

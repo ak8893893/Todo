@@ -13,6 +13,9 @@ namespace Todo.Parameters
 
         private string _order;
 
+        public DateTime? StartTime { get; set; }
+        public DateTime? EndTime { get; set; }
+
         public string Order
         {
             get { return _order; }

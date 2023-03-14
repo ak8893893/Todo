@@ -233,6 +233,8 @@ namespace Todo.Controllers
                 Name = value.Name,
                 Enable = value.Enable,
                 Orders = value.Orders,
+                StartTime = value.StartTime,
+                EndTime = value.EndTime,
 
                 // 再來把系統決定的值放入
                 InsertTime = DateTime.Now,
@@ -266,6 +268,8 @@ namespace Todo.Controllers
                 Name = value.Name,
                 Enable = value.Enable,
                 Orders = value.Orders,
+                StartTime = value.StartTime,
+                EndTime = value.EndTime,
 
                 // 再來把系統決定的值放入
                 InsertTime = DateTime.Now,
@@ -276,7 +280,8 @@ namespace Todo.Controllers
                 UpdateEmployeeId = Guid.Parse("59308743-99e0-4d5a-b611-b0a7facaf21e"),
 
                 // 同時新增子資料
-                UploadFiles = (ICollection<UploadFile>)value.UploadFiles,
+                //UploadFiles = (ICollection<UploadFile>)value.UploadFiles,
+                UploadFiles = _iMapper.Map<ICollection<UploadFile>>(value.UploadFiles)
             };
 
             _todoContext.TodoLists.Add(insert);
@@ -921,6 +926,8 @@ namespace Todo.Controllers
                 UpdateEmployeeQName = a.UpdateEmployee.Name + "(" + a.UpdateEmployeeId + ")",
                 UpdateTime = a.UpdateTime,
                 UploadFiles = updto,
+                StartTime= a.StartTime,
+                EndTime= a.EndTime,
             };
         }
 

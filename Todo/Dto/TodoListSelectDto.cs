@@ -16,5 +16,8 @@ namespace Todo.Dto
         public string UpdateEmployeeQName { get; set; }
         public ICollection<UploadFileDto> UploadFiles { get; set; }
 
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
+
     }
 }

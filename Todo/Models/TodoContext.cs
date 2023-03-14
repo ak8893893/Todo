@@ -1,7 +1,6 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Todo.Dto;
 
 #nullable disable
 
@@ -24,8 +23,6 @@ namespace Todo.Models
         public virtual DbSet<TodoList> TodoLists { get; set; }
         public virtual DbSet<UploadFile> UploadFiles { get; set; }
 
-        public virtual DbSet<TodoListSelectDto> TodoListSelectDtos { get; set; }
-
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
@@ -38,8 +35,6 @@ namespace Todo.Models
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.HasAnnotation("Relational:Collation", "SQL_Latin1_General_CP1_CI_AS");
-
-            modelBuilder.Entity<TodoListSelectDto>().HasNoKey();
 
             modelBuilder.Entity<Division>(entity =>
             {
@@ -99,11 +94,15 @@ namespace Todo.Models
 
                 entity.Property(e => e.TodoId).HasDefaultValueSql("(newid())");
 
+                entity.Property(e => e.EndTime).HasColumnType("datetime");
+
                 entity.Property(e => e.InsertTime)
                     .HasColumnType("datetime")
                     .HasDefaultValueSql("(getdate())");
 
                 entity.Property(e => e.Name).IsRequired();
+
+                entity.Property(e => e.StartTime).HasColumnType("datetime");
 
                 entity.Property(e => e.UpdateTime)
                     .HasColumnType("datetime")
@@ -135,7 +134,7 @@ namespace Todo.Models
                 entity.HasOne(d => d.Todo)
                     .WithMany(p => p.UploadFiles)
                     .HasForeignKey(d => d.TodoId)
-                    //.OnDelete(DeleteBehavior.ClientSetNull)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_File_ToTable");
             });
 
