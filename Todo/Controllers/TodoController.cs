@@ -11,6 +11,7 @@ using Todo.Dto;
 using Todo.Models;
 using Todo.Parameters;
 using System.Text.Json;
+using Todo.Services;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -21,12 +22,17 @@ namespace Todo.Controllers
     public class TodoController : ControllerBase
     {
         private readonly TodoContext _todoContext;
+        private readonly TodoListService _todoListService;
         private readonly IMapper _iMapper;
 
-        public TodoController(TodoContext todoContext, IMapper iMapper)
+        public TodoController(
+            TodoContext todoContext, 
+            IMapper iMapper,
+            TodoListService todoListService)
         {
             _todoContext = todoContext;
             _iMapper = iMapper;
+            _todoListService = todoListService;
         }
 
 
@@ -35,38 +41,17 @@ namespace Todo.Controllers
         [HttpGet]
         public IActionResult Get([FromQuery] TodoSelectParameters value)
         {
-            var result = _todoContext.TodoLists.
-                Include(a => a.UpdateEmployee).
-                Include(a => a.InsertEmployee).
-                Include(a => a.UploadFiles)
-                .Select(a => a);
+            // 商業邏輯在DI注入時已經完成了
+            var result = _todoListService.取得資料(value);
 
-            if (!string.IsNullOrEmpty(value.name))
-            {
-                result = result.Where(a => a.Name.IndexOf(value.name) > -1);
-            }
 
-            if (value.enable != null)
-            {
-                result = result.Where(a => a.Enable == value.enable);
-            }
-
-            if (value.InsertTime != null)
-            {
-                result = result.Where(a => a.InsertTime.Date == value.InsertTime);
-            }
-
-            if (value.maxOrder != null & value.minOrder != null)
-            {
-                result = result.Where(a => a.Orders <= value.maxOrder && a.Orders >= value.minOrder);
-            }
-
+            // 控制邏輯
             if (result == null || result.Count() <= 0)
             {
                 return NotFound("找不到資源");
             }
 
-            return Ok(result.ToList().Select(a => ItemToDto(a)));
+            return Ok(result);
         }
 
         //讀取單筆資料的API
@@ -75,29 +60,11 @@ namespace Todo.Controllers
         [HttpGet("{id}")]
         public IActionResult GetTodoList(Guid id)
         {
-            var result = (from a in _todoContext.TodoLists
-                          where a.TodoId == id
-                          select new TodoListSelectDto
-                          {
-                              Enable = a.Enable,
-                              InsertEmployeeQName = a.InsertEmployee.Name + "(" + a.InsertEmployeeId + ")",
-                              InsertTime = a.InsertTime,
-                              Name = a.Name,
-                              Orders = a.Orders,
-                              TodoId = a.TodoId,
-                              UpdateEmployeeQName = a.UpdateEmployee.Name + "(" + a.UpdateEmployeeId + ")",
-                              UpdateTime = a.UpdateTime,
-                              UploadFiles = (from b in _todoContext.UploadFiles
-                                             where a.TodoId == b.TodoId
-                                             select new UploadFileDto
-                                             {
-                                                 Name = b.Name,
-                                                 Src = b.Src,
-                                                 TodoId = b.TodoId,
-                                                 UploadFileId = b.UploadFileId,
-                                             }).ToList()
-                          }).SingleOrDefault();
+            // 商業邏輯在DI注入時就完成了
+            var result = _todoListService.取得單筆資料(id);
 
+
+            // 控制邏輯
             if (result == null)
             {
                 return NotFound("找不到ID: " + id.ToString() + " 的資料");
@@ -155,35 +122,12 @@ namespace Todo.Controllers
         [HttpGet("AutoMapper")]
         public IEnumerable<TodoListSelectDto> GetAutoMapper([FromQuery] TodoSelectParameters value)
         {
-            var result = _todoContext.TodoLists.
-                Include(a => a.UpdateEmployee).
-                Include(a => a.InsertEmployee)
-                .Include(a => a.UploadFiles)
-                .Select(a => a);
+            // 商業邏輯在DI注入時完成
+            var result = _todoListService.使用AutoMapper取得資料(value);
 
-            if (!string.IsNullOrEmpty(value.name))
-            {
-                result = result.Where(a => a.Name.IndexOf(value.name) > -1);
-            }
-
-            if (value.enable != null)
-            {
-                result = result.Where(a => a.Enable == value.enable);
-            }
-
-            if (value.InsertTime != null)
-            {
-                result = result.Where(a => a.InsertTime.Date == value.InsertTime);
-            }
-
-            if (value.maxOrder != null & value.minOrder != null)
-            {
-                result = result.Where(a => a.Orders <= value.maxOrder && a.Orders >= value.minOrder);
-            }
-
-            var map = _iMapper.Map<IEnumerable<TodoListSelectDto>>(result);
-
-            return map;
+            // 這邊剛好沒有控制邏輯 直接return 結果
+            
+            return result;
         }
 
         // AutoMapper接口

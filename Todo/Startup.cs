@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using Todo.Models;
 using Microsoft.AspNetCore.Mvc.NewtonsoftJson;
 using System.Text.Json.Serialization;
+using Todo.Services;
 
 namespace Todo
 {
@@ -35,6 +36,8 @@ namespace Todo
                 .AddNewtonsoftJson();
             services.AddDbContext<TodoContext>(options => options.UseSqlServer(Configuration.GetConnectionString("TodoDatabase")));
             services.AddAutoMapper(typeof(Startup));
+
+            services.AddScoped<TodoListService>();
 
             // 加下面這個避免net5跳錯 (這個會多$id)
    //         services.AddControllers().AddJsonOptions(x =>
