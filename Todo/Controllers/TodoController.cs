@@ -451,28 +451,22 @@ namespace Todo.Controllers
                 return BadRequest("url id 與 body ID 不符合");
             }
 
-            _todoContext.Entry(value).State = EntityState.Modified; // 修改新得到的值 這個寫法是自動找到內容進行更新
+            var response = _todoListService.更新資料(id, value);
 
-            // _todoContext.TodoLists.Update(value); // 這個寫法也可以  可以直覺知道是更新什麼資料
 
-            try
+            if (response == 1)  // 如果傳入的id 找不到任何一樣 回傳沒找到該筆資料 
             {
-                _todoContext.SaveChanges();         // 將更新後的新資料存入資料庫
+                return NoContent();                     // 成功存取後回傳 204 NoContent
+                
             }
-            catch (DbUpdateException)
+            else if (response == 404)
             {
-                if (!_todoContext.TodoLists.Any(e => e.TodoId == id))  // 如果傳入的id 找不到任何一樣 回傳沒找到該筆資料 
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    return StatusCode(500, "存取發生錯誤");             // 如果都有也都合法 還是失敗 回傳伺服器端存取有問題 
-                }
-
+                return NotFound();
             }
-
-            return NoContent();                     // 成功存取後回傳 204 NoContent
+            else 
+            {
+                return StatusCode(500, "存取發生錯誤");             // 如果都有也都合法 還是失敗 回傳伺服器端存取有問題 
+            }
         }
 
 
@@ -705,14 +699,11 @@ namespace Todo.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(Guid id)
         {
-            var delete = _todoContext.TodoLists.Find(id);
-            if (delete == null)
+            var response = _todoListService.刪除資料(id);
+            if (response == 0)
             {
-                return NotFound("沒有找到你指定的資料");
+                return NotFound("找不到要刪除的資料");
             }
-            _todoContext.TodoLists.Remove(delete);
-            _todoContext.SaveChanges();
-
             return NoContent();
         }
 

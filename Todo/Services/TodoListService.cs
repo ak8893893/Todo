@@ -167,6 +167,42 @@ namespace Todo.Services
 
             return map;
         }
+
+        public int 更新資料(Guid id,  TodoList value)
+        {
+            _todoContext.Entry(value).State = EntityState.Modified; // 修改新得到的值 這個寫法是自動找到內容進行更新
+
+            // _todoContext.TodoLists.Update(value); // 這個寫法也可以  可以直覺知道是更新什麼資料
+
+            try
+            {
+                _todoContext.SaveChanges();         // 將更新後的新資料存入資料庫
+
+                return _todoContext.SaveChanges();
+            }
+            catch (DbUpdateException)
+            {
+                if (!_todoContext.TodoLists.Any(e => e.TodoId == id))  // 如果傳入的id 找不到任何一樣 回傳沒找到該筆資料 
+                {
+                    return 404;
+                }
+                else
+                {
+                    return 500;             // 如果都有也都合法 還是失敗 回傳伺服器端存取有問題 
+                }
+
+            }
+        }
+
+        public int 刪除資料 (Guid id)
+        {
+            var delete = _todoContext.TodoLists.Find(id);
+            if (delete != null)
+            {
+                _todoContext.TodoLists.Remove(delete);
+            }
+            return _todoContext.SaveChanges(); 
+        }
         private static TodoListSelectDto ItemToDto(TodoList a)
         {
             List<UploadFileDto> updto = new List<UploadFileDto>();
