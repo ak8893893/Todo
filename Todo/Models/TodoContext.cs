@@ -28,7 +28,7 @@ namespace Todo.Models
             if (!optionsBuilder.IsConfigured)
             {
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-                optionsBuilder.UseSqlServer("Data Source=(LocalDB)\\MSSQLLocalDB;AttachDbFilename= H:\\Code\\01-C#\\02-Todo\\Todo.mdf;Integrated Security=True;Connect Timeout=30");
+                optionsBuilder.UseSqlServer("Data Source=(LocalDB)\\MSSQLLocalDB;AttachDbFilename=D:\\Todo.mdf;Integrated Security=True;Connect Timeout=30");
             }
         }
 
@@ -94,11 +94,15 @@ namespace Todo.Models
 
                 entity.Property(e => e.TodoId).HasDefaultValueSql("(newid())");
 
+                entity.Property(e => e.EndTime).HasColumnType("datetime");
+
                 entity.Property(e => e.InsertTime)
                     .HasColumnType("datetime")
                     .HasDefaultValueSql("(getdate())");
 
                 entity.Property(e => e.Name).IsRequired();
+
+                entity.Property(e => e.StartTime).HasColumnType("datetime");
 
                 entity.Property(e => e.UpdateTime)
                     .HasColumnType("datetime")

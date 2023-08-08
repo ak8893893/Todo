@@ -9,6 +9,8 @@ namespace Todo.Profiles
         public UploadFileProfile()
         {
             CreateMap<UploadFile, UploadFileDto>();
+
+            CreateMap<UploadFilePostDto, UploadFile>();
         }
     }
 }

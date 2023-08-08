@@ -20,6 +20,8 @@ namespace Todo.Models
         public int Orders { get; set; }
         public Guid InsertEmployeeId { get; set; }
         public Guid UpdateEmployeeId { get; set; }
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
 
         public virtual Employee InsertEmployee { get; set; }
         public virtual Employee UpdateEmployee { get; set; }
